@@ -533,18 +533,30 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
 
-  int k_getNumProc(void){
-    struct proc *p;
-    int num_active_procs = 0;
-    acquire(&ptable.lock);
+static int k_getNumProc(void){
+  struct proc *p;
+  int num_active_procs = 0;
+  acquire(&ptable.lock);
 
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-      if(p->state != UNUSED)
-        num_active_procs++;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    if(p->state != UNUSED)
+      num_active_procs++;
 
-    release(&ptable.lock);
-    return num_active_procs;
-  }
+  release(&ptable.lock);
+  return num_active_procs;
+}
 
+static int k_getNumProc(void){
+  struct proc *p;
+  int num_active_procs = 0;
+  acquire(&ptable.lock);
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    if(p->state != UNUSED)
+      num_active_procs++;
+
+  release(&ptable.lock);
+  return num_active_procs;
 }
