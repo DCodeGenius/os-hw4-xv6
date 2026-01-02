@@ -535,28 +535,74 @@ procdump(void)
   }
 }
 
+//returns the total number of active processes in the system
+//(either in embryo, running, runnable, sleeping, or zombie states)
 static int k_getNumProc(void){
   struct proc *p;
   int num_active_procs = 0;
   acquire(&ptable.lock);
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
     if(p->state != UNUSED)
       num_active_procs++;
-
+  }
   release(&ptable.lock);
   return num_active_procs;
 }
 
-static int k_getNumProc(void){
+// Return maximum PID among all active processes
+static int k_getMaxPid(void){
   struct proc *p;
-  int num_active_procs = 0;
+  int max_pid = 0;
   acquire(&ptable.lock);
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state != UNUSED)
-      num_active_procs++;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if(p->state != UNUSED) {
+      if (p->pid > max_pid)
+        max_pid = p->pid;
+    }
+  }
+  release(&ptable.lock);
+  return max_pid;
+}
+
+static int k_getProcInfo(int pid, struct processInfo *dst)
+{
+  struct proc *p;
+  int fd;
+
+  acquire(&ptable.lock);
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state == UNUSED)
+      continue;
+
+    if(p->pid == pid){
+      int ppid;
+
+      // parent PID (PID 1 has ppid=0 by convention)
+      if(p->pid == 1)
+        ppid = 0;
+      else if(p->parent)
+        ppid = p->parent->pid;
+      else
+        ppid = -1;
+
+      dst->ppid = ppid;
+      dst->state = p->state;
+      dst->sz = p->sz;
+      dst->nrswitch = p->nrswitch;
+
+      dst->nfd = 0;
+      for(fd = 0; fd < NOFILE; fd++)
+        if(p->ofile[fd])
+          dst->nfd++;
+
+      release(&ptable.lock);
+      return 0;
+    }
+  }
 
   release(&ptable.lock);
-  return num_active_procs;
+  return -1;
 }
