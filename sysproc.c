@@ -89,3 +89,16 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int sys_getNumProc(void){ //TODO dshmia implement
+  return 0;
+};
+
+int sys_getMaxPid(void){ //TODO dshmia implement
+  return 0;
+};
+
+int sys_getProcInfo(void){ //TODO dshmia implement
+  return 0;
+};
+
